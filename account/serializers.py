@@ -129,12 +129,20 @@ class UserLoginSerializer(serializers.Serializer):
 
 
 class SuperAdminUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(
+        write_only=True,
+        required=False,
+        allow_blank=True,
+        style={"input_type": "password"},
+    )
+
     class Meta:
         model = User
         fields = (
             "id",
             "username",
             "email",
+            "password",
             "first_name",
             "last_name",
             "is_active",
@@ -144,3 +152,20 @@ class SuperAdminUserSerializer(serializers.ModelSerializer):
             "role",
             "date_joined",
         )
+        read_only_fields = ("date_joined",)
+
+    def create(self, validated_data):
+        password = validated_data.pop("password", None)
+        user = super().create(validated_data)
+        if password:
+            user.set_password(password)
+            user.save(update_fields=["password"])
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+        user = super().update(instance, validated_data)
+        if password:
+            user.set_password(password)
+            user.save(update_fields=["password"])
+        return user
