@@ -45,13 +45,14 @@ class EvacuationCentreFilter(django_filters.FilterSet):
             try:
                 lat_val = float(latitude)
                 lon_val = float(longitude)
-                center = EvacuationCentre.objects.filter(
-                    latitude=lat_val, longitude=lon_val
-                ).first()
-                if center and center.province:
-                    return queryset.filter(province=center.province)
-                return queryset.none()
-            except ValueError:
+                return queryset.filter(latitude=lat_val, longitude=lon_val)
+            except (ValueError, TypeError):
+                pass
+        if value is not None:
+            try:
+                val = float(value)
+                return queryset.filter(**{name: val})
+            except (ValueError, TypeError):
                 pass
         return queryset
 
