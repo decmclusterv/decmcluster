@@ -21,9 +21,7 @@ class EvacuationCentre(models.Model):
     compound_function = models.CharField(max_length=255, null=True, blank=True)
     is_ec_owner_approved = models.BooleanField(default=False)
     is_ec_govt_approved = models.BooleanField(default=False)
-    name_of_outside_temporary_shelter = models.CharField(
-        max_length=255, null=True, blank=True
-    )
+    name_of_outside_temporary_shelter = models.CharField(max_length=255, null=True, blank=True)
     outside_temporary_shelter_capacity = models.IntegerField(null=True, blank=True)
     first_aid_kit_availability = models.BooleanField(default=False)
     first_aid_trained_person = models.BooleanField(default=False)
@@ -35,9 +33,7 @@ class EvacuationCentre(models.Model):
     no_of_rooms = models.IntegerField(null=True, blank=True)
     internal_building_evacuee_capacity = models.IntegerField(null=True, blank=True)
     disaster_suitable_for = models.CharField(max_length=255, null=True, blank=True)
-    enginerring_certified_cyclone_rating = models.CharField(
-        max_length=255, null=True, blank=True
-    )
+    enginerring_certified_cyclone_rating = models.CharField(max_length=255, null=True, blank=True)
     total_mens_toilet = models.IntegerField(null=True, blank=True)
     total_womens_toilet = models.IntegerField(null=True, blank=True)
     total_unisex_toilet = models.IntegerField(null=True, blank=True)

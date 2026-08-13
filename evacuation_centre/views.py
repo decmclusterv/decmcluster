@@ -7,7 +7,7 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 from rest_framework.parsers import MultiPartParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -102,6 +102,31 @@ class EvacuationCentreMinimalListAPIView(ListAPIView):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = EvacuationCentreFilter
     search_fields = ["compound_name", "province", "area_council", "island", "village"]
+
+
+class EvacuationCentreSearchAPIView(ListAPIView):
+    """
+    GET /api/evacuation-centres/search/?q=<compound_name>
+    Returns a minimal list of evacuation centres matching the compound name.
+    Designed for autocomplete / lookup use cases.
+    """
+
+    serializer_class = EvacuationCentreMinimalSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        q = self.request.query_params.get("search", "").strip()
+        qs = (
+            EvacuationCentre.objects
+            .only(
+                "id", "compound_name", "latitude", "longitude",
+                "is_ec_owner_approved", "is_ec_govt_approved", "province",
+            )
+            .order_by("compound_name")
+        )
+        if q:
+            qs = qs.filter(compound_name__icontains=q)
+        return qs
 
 
 class EvacuationCentreExportAPIView(APIView):

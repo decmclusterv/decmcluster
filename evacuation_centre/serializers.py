@@ -5,6 +5,34 @@ from .services.import_service import find_duplicate_compound_names
 
 
 class EvacuationCentreSerializer(serializers.ModelSerializer):
+    # Fields that are nullable in DB (to preserve existing data) but
+    # required on new submissions via the API.
+    island = serializers.CharField(required=True)
+    village = serializers.CharField(required=True)
+    primary_contact = serializers.CharField(required=True)
+    secondary_contact = serializers.CharField(required=True)
+    compound_function = serializers.CharField(required=True)
+    name_of_outside_temporary_shelter = serializers.CharField(required=True)
+    outside_temporary_shelter_capacity = serializers.IntegerField(required=True)
+    electricity_source = serializers.CharField(required=True)
+    drinking_water_source = serializers.CharField(required=True)
+    washing_water_source = serializers.CharField(required=True)
+    water_storage_capacity_litres = serializers.IntegerField(required=True)
+    no_of_buildings = serializers.IntegerField(required=True)
+    no_of_rooms = serializers.IntegerField(required=True)
+    internal_building_evacuee_capacity = serializers.IntegerField(required=True)
+    disaster_suitable_for = serializers.CharField(required=True)
+    enginerring_certified_cyclone_rating = serializers.CharField(required=True)
+    total_mens_toilet = serializers.IntegerField(required=True)
+    total_womens_toilet = serializers.IntegerField(required=True)
+    total_unisex_toilet = serializers.IntegerField(required=True)
+    total_disability_access_toilet = serializers.IntegerField(required=True)
+    total_mens_shower = serializers.IntegerField(required=True)
+    total_womens_shower = serializers.IntegerField(required=True)
+    total_unisex_shower = serializers.IntegerField(required=True)
+    total_disability_access_shower = serializers.IntegerField(required=True)
+    communication_back_up = serializers.CharField(required=True)
+
     class Meta:
         model = EvacuationCentre
         fields = "__all__"
@@ -24,6 +52,12 @@ class EvacuationCentreSerializer(serializers.ModelSerializer):
         return clean_name
 
 
+from .services.import_service import (
+    find_duplicate_compound_names,
+    find_missing_required_fields,
+)
+
+
 class FileImportSerializer(serializers.Serializer):
     name = serializers.CharField(required=False, allow_blank=True)
     file = serializers.FileField()
@@ -35,6 +69,17 @@ class FileImportSerializer(serializers.Serializer):
                 "Only Excel (.xlsx, .xls) or CSV (.csv) files are allowed."
             )
 
+        # Check for missing required fields
+        missing_errors = find_missing_required_fields(value)
+        if missing_errors:
+            # Return top 5 missing field errors for readability
+            error_str = " | ".join(missing_errors[:5])
+            if len(missing_errors) > 5:
+                error_str += f" and {len(missing_errors) - 5} more errors"
+            raise serializers.ValidationError(
+                f"File validation failed due to missing required fields: {error_str}"
+            )
+
         duplicates = find_duplicate_compound_names(value)
         if duplicates:
             duplicate_str = ", ".join(sorted(duplicates)[:5])
@@ -44,6 +89,7 @@ class FileImportSerializer(serializers.Serializer):
                 f"Duplicate data: The uploaded file contains compound name(s) that already exist or appear multiple times: {duplicate_str}."
             )
         return value
+
 
 
 class EvacuationCentreMinimalSerializer(serializers.ModelSerializer):

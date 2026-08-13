@@ -44,6 +44,7 @@ urlpatterns = (
         path("api/", include("emergency_alert.urls")),
         path("api/", include("announcement.urls")),
         path("api/", include("archive.urls")),
+        path("api/", include("displacement_data.urls")),
     ]
     + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

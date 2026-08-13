@@ -8,6 +8,7 @@ from .views import (
     EvacuationCentreImportListAPIView,
     EvacuationCentreListCreateAPIView,
     EvacuationCentreMinimalListAPIView,
+    EvacuationCentreSearchAPIView,
     EvacuationCentreStatsAPIView,
 )
 
@@ -21,6 +22,11 @@ urlpatterns = [
         "evacuation-centres/location/",
         EvacuationCentreMinimalListAPIView.as_view(),
         name="evacuation-centre-minimal-list",
+    ),
+    path(
+        "evacuation-centres/search/",
+        EvacuationCentreSearchAPIView.as_view(),
+        name="evacuation-centre-search",
     ),
     path(
         "evacuation-centres/import/",

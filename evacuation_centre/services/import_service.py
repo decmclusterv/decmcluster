@@ -98,6 +98,109 @@ def find_duplicate_compound_names(file_obj):
     return list(duplicates)
 
 
+def find_missing_required_fields(file_obj):
+    """
+    Scans the uploaded file for missing required fields and returns a list of errors
+    indicating row and column names.
+    """
+    file_name = getattr(file_obj, "name", "").lower()
+    if hasattr(file_obj, "seek"):
+        file_obj.seek(0)
+
+    rows = []
+    if file_name.endswith(".csv"):
+        content = file_obj.read()
+        if isinstance(content, bytes):
+            try:
+                decoded = content.decode("utf-8")
+            except UnicodeDecodeError:
+                decoded = content.decode("latin-1")
+        else:
+            decoded = content
+        csv_file = io.StringIO(decoded)
+        reader = csv.reader(csv_file)
+        rows = list(reader)
+        
+        header_index = 0
+        for idx, row in enumerate(rows[:5]):
+            if len(row) > 3 and (
+                row[0].strip().lower() == "country"
+                or row[1].strip().lower() == "organisation"
+            ):
+                header_index = idx
+                break
+        data_rows_start = header_index + 1
+    else:
+        wb = openpyxl.load_workbook(file_obj, data_only=True)
+        sheet = wb.active
+        rows = []
+        for r in range(1, sheet.max_row + 1):
+            row_vals = [sheet.cell(row=r, column=c).value for c in range(1, 40)]
+            rows.append(row_vals)
+        data_rows_start = 3
+
+    if hasattr(file_obj, "seek"):
+        file_obj.seek(0)
+
+    required_cols = [
+        (1, "Country"),
+        (2, "Organization"),
+        (3, "Agency"),
+        (4, "Compound Name"),
+        (5, "Latitude"),
+        (6, "Longitude"),
+        (7, "Province"),
+        (8, "Area Council"),
+        (9, "Island"),
+        (10, "Village"),
+        (11, "Primary Contact"),
+        (12, "Secondary Contact"),
+        (13, "Compound Function"),
+        (16, "Name of Outside Temporary Shelter"),
+        (17, "Outside Temporary Shelter Capacity"),
+        (20, "Electricity Source"),
+        (21, "Drinking Water Source"),
+        (22, "Washing Water Source"),
+        (23, "Water Storage Capacity (Litres)"),
+        (24, "No of Buildings"),
+        (25, "No of Rooms"),
+        (26, "Internal Building Evacuee Capacity"),
+        (27, "Disaster Suitable For"),
+        (28, "Engineering Certified Cyclone Rating"),
+        (29, "Total Men's Toilet"),
+        (30, "Total Women's Toilet"),
+        (31, "Total Unisex Toilet"),
+        (32, "Total Disability Access Toilet"),
+        (33, "Total Men's Shower"),
+        (34, "Total Women's Shower"),
+        (35, "Total Unisex Shower"),
+        (36, "Total Disability Access Shower"),
+        (39, "Communication Back Up"),
+    ]
+
+    errors = []
+    for row_idx, row in enumerate(rows):
+        if row_idx < data_rows_start:
+            continue
+
+        if not any(str(val).strip() for val in row if val is not None):
+            continue
+
+        comp_name = row[3] if len(row) > 3 else None
+        if not comp_name or not str(comp_name).strip():
+            continue
+
+        for col_idx, col_name in required_cols:
+            val = None
+            if len(row) >= col_idx:
+                val = row[col_idx - 1]
+
+            if val is None or str(val).strip() == "":
+                errors.append(f"Row {row_idx + 1}: Column {col_idx} ({col_name}) is missing.")
+
+    return errors
+
+
 def import_evacuation_centres_from_excel(file_path):
     """
     Reads Evacuation Centres from an Excel sheet and creates them in the DB,

@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     "emergency_alert",
     "announcement",
     "archive",
+    "displacement_data",
     "decmcluster.apps.DecmClusterConfig",
     "tinymce",
 ]
@@ -105,13 +106,13 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://api.decmcluster.org",
     "https://www.api.decmcluster.org",
-    "https://pit-cursor-phillips-lucia.trycloudflare.com",
+    "https://emacs-planets-div-deputy.trycloudflare.com",
 ]
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "https://api.decmcluster.org",
     "https://www.api.decmcluster.org",
-    "https://pit-cursor-phillips-lucia.trycloudflare.com",
+    "https://emacs-planets-div-deputy.trycloudflare.com",
 ]
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
