@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
@@ -7,6 +8,7 @@ from .models import EvacuationCentreImport
 from .services.import_service import (
     import_evacuation_centres_from_csv,
     import_evacuation_centres_from_excel,
+    find_missing_required_fields,
 )
 from .utils import send_evacuation_centre_import_verification_email
 
@@ -45,6 +47,13 @@ def handle_import_status_change(sender, instance, created, **kwargs):
             if instance.file:
                 instance.file.open()
                 try:
+                    # Run missing required fields validation check
+                    errors = find_missing_required_fields(instance.file)
+                    if errors:
+                        raise ValidationError(
+                            f"Cannot verify: spreadsheet has missing fields: {errors[0]}"
+                        )
+
                     file_name = instance.file.name.lower()
                     if file_name.endswith(".csv"):
                         import_evacuation_centres_from_csv(instance.file)

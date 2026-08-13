@@ -8,6 +8,188 @@ import openpyxl
 from ..models import VillageAssessment
 
 
+def find_missing_required_fields(file_obj):
+    """
+    Scans the uploaded file for missing required fields and returns a list of errors
+    indicating row and column names.
+    """
+    file_name = getattr(file_obj, "name", "").lower()
+    if hasattr(file_obj, "seek"):
+        file_obj.seek(0)
+
+    rows = []
+    if file_name.endswith(".csv"):
+        content = file_obj.read()
+        if isinstance(content, bytes):
+            try:
+                decoded = content.decode("utf-8")
+            except UnicodeDecodeError:
+                decoded = content.decode("latin-1")
+        else:
+            decoded = content
+        csv_file = io.StringIO(decoded)
+        reader = csv.reader(csv_file)
+        rows = list(reader)
+        
+        header_index = -1
+        for idx, row in enumerate(rows[:5]):
+            if len(row) > 2 and "survey_start" in row[0].strip().lower():
+                header_index = idx
+                break
+        if header_index == -1:
+            header_index = 0
+        data_rows_start = header_index + 1
+    else:
+        wb = openpyxl.load_workbook(file_obj, data_only=True)
+        sheet = wb.active
+        rows = []
+        for r in range(1, sheet.max_row + 1):
+            row_vals = [sheet.cell(row=r, column=c).value for c in range(1, 114)]
+            rows.append(row_vals)
+        data_rows_start = 1
+
+    if hasattr(file_obj, "seek"):
+        file_obj.seek(0)
+
+    required_cols = [
+        (1, "Survey Start"),
+        (2, "Survey End"),
+        (3, "Survey Date"),
+        (4, "Enumerator Username"),
+        (5, "Device ID"),
+        (6, "Audit File"),
+        (7, "Audit URL"),
+        (8, "Consent"),
+        (9, "Methodology Individual KI"),
+        (10, "Methodology Group KI"),
+        (11, "Methodology Direct Observation"),
+        (12, "Methodology Other"),
+        (13, "Data Collection Method"),
+        (14, "KI1 Name"),
+        (15, "KI1 Type"),
+        (16, "KI1 Gender"),
+        (17, "KI1 Age"),
+        (18, "KI1 Contact"),
+        (19, "KI2 Name"),
+        (20, "KI2 Type"),
+        (21, "KI2 Gender"),
+        (22, "KI2 Age"),
+        (23, "KI2 Contact"),
+        (24, "KI3 Name"),
+        (25, "KI3 Type"),
+        (26, "KI3 Gender"),
+        (27, "KI3 Age"),
+        (28, "KI3 Contact"),
+        (29, "KI4 Name"),
+        (30, "KI4 Type"),
+        (31, "KI4 Gender"),
+        (32, "KI4 Age"),
+        (33, "KI4 Contact"),
+        (34, "KI5 Name"),
+        (35, "KI5 Type"),
+        (36, "KI5 Gender"),
+        (37, "KI5 Age"),
+        (38, "KI5 Contact"),
+        (39, "KI6 Name"),
+        (40, "KI6 Type"),
+        (41, "KI6 Gender"),
+        (42, "KI6 Age"),
+        (43, "KI6 Contact"),
+        (44, "Assessment Date"),
+        (45, "Assessment Start Time"),
+        (46, "Enumerator1 Name"),
+        (47, "Enumerator1 Phone"),
+        (48, "Enumerator1 Gender"),
+        (49, "Enumerator2 Name"),
+        (50, "Enumerator2 Phone"),
+        (51, "Enumerator2 Gender"),
+        (52, "Province"),
+        (53, "Area Council"),
+        (54, "Village Name"),
+        (55, "Village Other"),
+        (56, "Village Condition"),
+        (57, "IDP Present"),
+        (58, "IDP Households Total"),
+        (59, "IDP Infant Male"),
+        (60, "IDP Infant Female"),
+        (61, "IDP Child 1-5 Male"),
+        (62, "IDP Child 1-5 Female"),
+        (63, "IDP Child 6-12 Male"),
+        (64, "IDP Child 6-12 Female"),
+        (65, "IDP Adolescent Male"),
+        (66, "IDP Adolescent Female"),
+        (67, "IDP Adult Male"),
+        (68, "IDP Adult Female"),
+        (69, "IDP Elderly Male"),
+        (70, "IDP Elderly Female"),
+        (71, "IDP Male Total"),
+        (72, "IDP Female Total"),
+        (73, "IDP Individuals Total"),
+        (74, "Returnees Present"),
+        (75, "Returnee Households Total"),
+        (76, "Returnee Individuals Total"),
+        (77, "Pregnant Women Count"),
+        (78, "Female Headed HH"),
+        (79, "Elderly Headed HH"),
+        (80, "Male Headed HH"),
+        (81, "Child Headed HH"),
+        (82, "PWD Total"),
+        (83, "IDP PWD Total"),
+        (84, "Shelter Primary"),
+        (85, "Shelter Secondary"),
+        (86, "Displacement Shelter Type"),
+        (87, "Displaced HH Estimated"),
+        (88, "Displacement Duration"),
+        (89, "Housing Type Pre Cyclone"),
+        (90, "House Rebuild Duration"),
+        (91, "Rebuild Material Type"),
+        (92, "House Cyclone Resilience"),
+        (93, "Remaining IDP Intention"),
+        (94, "Seasonal Worker Level"),
+        (95, "Community Participation"),
+        (96, "CDCCC Exists"),
+        (97, "Early Warning Received"),
+        (98, "Annual Population Displaced"),
+        (99, "Top Need 1"),
+        (100, "Top Need 2"),
+        (101, "Top Need 3"),
+        (102, "GPS Latitude"),
+        (103, "GPS Longitude"),
+        (104, "GPS Altitude"),
+        (105, "GPS Precision"),
+        (106, "Record ID"),
+        (107, "Record UUID"),
+        (108, "Submission Time"),
+        (109, "Validation Status"),
+        (110, "Submission Status"),
+        (111, "Submitted By"),
+        (112, "Form Version"),
+        (113, "Record Index"),
+    ]
+
+    errors = []
+    for row_idx, row in enumerate(rows):
+        if row_idx < data_rows_start:
+            continue
+
+        if not any(str(val).strip() for val in row if val is not None):
+            continue
+
+        village_name = row[53] if len(row) > 53 else None
+        if not village_name or not str(village_name).strip():
+            continue
+
+        for col_idx, col_name in required_cols:
+            val = None
+            if len(row) >= col_idx:
+                val = row[col_idx - 1]
+
+            if val is None or str(val).strip() == "":
+                errors.append(f"Row {row_idx + 1}: Column {col_idx} ({col_name}) is missing.")
+
+    return errors
+
+
 def to_int(val):
     if val is None:
         return 0

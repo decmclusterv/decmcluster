@@ -7,6 +7,136 @@ import openpyxl
 from ..models import FiveWActivity
 
 
+def find_missing_required_fields(file_obj):
+    """
+    Scans the uploaded file for missing required fields and returns a list of errors
+    indicating row and column names.
+    """
+    file_name = getattr(file_obj, "name", "").lower()
+    if hasattr(file_obj, "seek"):
+        file_obj.seek(0)
+
+    rows = []
+    if file_name.endswith(".csv"):
+        content = file_obj.read()
+        if isinstance(content, bytes):
+            try:
+                decoded = content.decode("utf-8")
+            except UnicodeDecodeError:
+                decoded = content.decode("latin-1")
+        else:
+            decoded = content
+        csv_file = io.StringIO(decoded)
+        reader = csv.reader(csv_file)
+        rows = list(reader)
+        
+        header_index = -1
+        for idx, row in enumerate(rows[:5]):
+            if len(row) > 2 and "donor" in row[0].strip().lower():
+                header_index = idx
+                break
+        if header_index == -1:
+            header_index = 1
+        data_rows_start = header_index + 1
+    else:
+        wb = openpyxl.load_workbook(file_obj, data_only=True)
+        if "5Ws" in wb.sheetnames:
+            sheet = wb["5Ws"]
+        else:
+            sheet = wb.active
+        rows = []
+        for r in range(1, sheet.max_row + 1):
+            row_vals = [sheet.cell(row=r, column=c).value for c in range(1, 61)]
+            rows.append(row_vals)
+        data_rows_start = 2
+
+    if hasattr(file_obj, "seek"):
+        file_obj.seek(0)
+
+    required_cols = [
+        (1, "Donor"),
+        (2, "Donor Names"),
+        (3, "Reporting Org Name"),
+        (4, "RO Code"),
+        (5, "Reporting Org Type"),
+        (6, "Other IP Name"),
+        (7, "IP Code"),
+        (8, "IP Type"),
+        (9, "Reporting Month"),
+        (10, "Activity Status"),
+        (11, "State Abyei"),
+        (12, "Admin1 Code"),
+        (13, "Province"),
+        (14, "Admin2 Code"),
+        (17, "Location Evac Name"),
+        (18, "Cluster Name"),
+        (19, "HRP/Non-HRP"),
+        (20, "Project Number"),
+        (21, "Project Name"),
+        (22, "Activity"),
+        (23, "Indicator"),
+        (24, "Unit"),
+        (25, "Target"),
+        (26, "Total Value"),
+        (27, "New Beneficiaries"),
+        (28, "Beneficiaries Type Under 18"),
+        (29, "Child Male Under 18"),
+        (30, "Child Female Under 18"),
+        (31, "Adult Male 18-60"),
+        (32, "Adult Female 18-60"),
+        (33, "Elderly Male 60+"),
+        (34, "Elderly Female 60+"),
+        (35, "Total Beneficiaries Reached"),
+        (36, "People With Disability"),
+        (37, "Is MPC"),
+        (38, "Modality"),
+        (39, "Type Of Modality"),
+        (40, "Delivery Mechanism"),
+        (41, "Number Of Transfers"),
+        (42, "Value SSP"),
+        (43, "Value USD"),
+        (44, "Comments"),
+        (45, "Contribute HRP AAP"),
+        (46, "HRP AAP Indicators"),
+        (47, "Activity Type"),
+        (48, "Sub Activity Type"),
+        (49, "Measurements"),
+        (50, "Achieved"),
+        (51, "Column1"),
+        (52, "Boys Above 5"),
+        (53, "Girls Above 5"),
+        (54, "Boys 5-17"),
+        (55, "Girls 5-17"),
+        (56, "Men 18-59"),
+        (57, "Women 18-59"),
+        (58, "Men 60+"),
+        (59, "Women 60+"),
+        (60, "Total Reached Quarter"),
+    ]
+
+    errors = []
+    for row_idx, row in enumerate(rows):
+        if row_idx < data_rows_start:
+            continue
+
+        if not any(str(val).strip() for val in row if val is not None):
+            continue
+
+        reporting_org_name = row[2] if len(row) > 2 else None
+        if not reporting_org_name or not str(reporting_org_name).strip():
+            continue
+
+        for col_idx, col_name in required_cols:
+            val = None
+            if len(row) >= col_idx:
+                val = row[col_idx - 1]
+
+            if val is None or str(val).strip() == "":
+                errors.append(f"Row {row_idx + 1}: Column {col_idx} ({col_name}) is missing.")
+
+    return errors
+
+
 def to_int(val):
     if val is None:
         return 0

@@ -7,6 +7,106 @@ import openpyxl
 from ..models import Displacement
 
 
+def find_missing_required_fields(file_obj):
+    """
+    Scans the uploaded file for missing required fields and returns a list of errors
+    indicating row and column names.
+    """
+    file_name = getattr(file_obj, "name", "").lower()
+    if hasattr(file_obj, "seek"):
+        file_obj.seek(0)
+
+    rows = []
+    if file_name.endswith(".csv"):
+        content = file_obj.read()
+        if isinstance(content, bytes):
+            try:
+                decoded = content.decode("utf-8")
+            except UnicodeDecodeError:
+                decoded = content.decode("latin-1")
+        else:
+            decoded = content
+        csv_file = io.StringIO(decoded)
+        reader = csv.reader(csv_file)
+        rows = list(reader)
+        
+        header_index = 0
+        for idx, row in enumerate(rows[:5]):
+            if len(row) > 1 and "operation" in [cell.strip().lower() for cell in row]:
+                header_index = idx
+                break
+        data_rows_start = header_index + 1
+    else:
+        wb = openpyxl.load_workbook(file_obj, data_only=True)
+        sheet = wb.active
+        rows = []
+        for r in range(1, sheet.max_row + 1):
+            row_vals = [sheet.cell(row=r, column=c).value for c in range(1, 34)]
+            rows.append(row_vals)
+        data_rows_start = 1
+
+    if hasattr(file_obj, "seek"):
+        file_obj.seek(0)
+
+    required_cols = [
+        (1, "Operation Code"),
+        (2, "Operation"),
+        (3, "Admin0 Name"),
+        (4, "Admin0 Pcode"),
+        (5, "Admin1 Name"),
+        (6, "Admin1 Pcode"),
+        (7, "Admin2 Name"),
+        (8, "Admin2 Pcode"),
+        (9, "Admin Level"),
+        (10, "Num Present IDPs"),
+        (11, "Reporting Date"),
+        (12, "Reporting Year"),
+        (13, "Reporting Month"),
+        (14, "Round Number"),
+        (15, "Displacement Reason"),
+        (16, "Males Number"),
+        (17, "Female Number"),
+        (18, "Males Number 0-4"),
+        (19, "Females Number 0-4"),
+        (20, "Males Number 5-17"),
+        (21, "Females Number 5-17"),
+        (22, "Males Number 18-59"),
+        (23, "Females Number 18-59"),
+        (24, "Males Number 60+"),
+        (25, "Females Number 60+"),
+        (26, "Total Vul HHs"),
+        (27, "IDP Origin Admin1 Name"),
+        (28, "IDP Origin Admin1 Pcode"),
+        (29, "Assessment Type"),
+        (30, "Operation Status"),
+        (31, "IDP Destination"),
+        (32, "IDP Destination Admin1 Name"),
+        (33, "IDP Destination Admin1 Pcode"),
+    ]
+
+    errors = []
+    for row_idx, row in enumerate(rows):
+        if row_idx < data_rows_start:
+            continue
+
+        if not any(str(val).strip() for val in row if val is not None):
+            continue
+
+        operation = row[1] if len(row) > 1 else None
+        if not operation or not str(operation).strip():
+            continue
+
+        for col_idx, col_name in required_cols:
+            val = None
+            if len(row) >= col_idx:
+                val = row[col_idx - 1]
+
+            if val is None or str(val).strip() == "":
+                errors.append(f"Row {row_idx + 1}: Column {col_idx} ({col_name}) is missing.")
+
+    return errors
+
+
 def to_int(val):
     if val is None:
         return None
