@@ -169,3 +169,35 @@ class SuperAdminUserSerializer(serializers.ModelSerializer):
             user.set_password(password)
             user.save(update_fields=["password"])
         return user
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(
+        write_only=True, required=True, style={"input_type": "password"}
+    )
+    new_password = serializers.CharField(
+        write_only=True, required=True, style={"input_type": "password"}
+    )
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        if not request or not request.user:
+            raise serializers.ValidationError("User context is required.")
+
+        user = request.user
+        old_password = attrs.get("old_password")
+        new_password = attrs.get("new_password")
+
+        if not user.check_password(old_password):
+            raise serializers.ValidationError({
+                "old_password": ["Incorrect current password."]
+            })
+
+        if old_password == new_password:
+            raise serializers.ValidationError({
+                "new_password": ["New password cannot be the same as the old password."]
+            })
+
+
+        return attrs
+

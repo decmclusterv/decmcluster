@@ -39,3 +39,13 @@ def send_verification_email(user) -> bool:
         template_name="emails/user_verification.html",
         context=context,
     )
+
+
+def change_user_password(user, new_password) -> None:
+    """
+    Sets the new password for the user and saves it.
+    """
+    user.set_password(new_password)
+    user.save()
+    logger.info(f"Password changed successfully for user: {user.email}")
+

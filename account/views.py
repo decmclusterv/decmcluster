@@ -12,6 +12,7 @@ from decmcluster.pagination import CustomPagination
 
 from .filters import UserFilter
 from .serializers import (
+    ChangePasswordSerializer,
     SuperAdminUserSerializer,
     UserLoginSerializer,
     UserRegistrationSerializer,
@@ -184,3 +185,19 @@ class SuperAdminUserDetailAPIView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, RoleBasedPermission]
     queryset = User.objects.all()
     serializer_class = SuperAdminUserSerializer
+
+
+class ChangePasswordAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
+        if serializer.is_valid():
+            from account.services.user_service import change_user_password
+            change_user_password(request.user, serializer.validated_data["new_password"])
+            return Response(
+                {"message": "Password changed successfully."},
+                status=status.HTTP_200_OK,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
