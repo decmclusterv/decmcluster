@@ -4,6 +4,9 @@ from .models import VillageAssessment, VillageAssessmentImport
 from .services.import_service import find_missing_required_fields
 
 
+from displacement.serializers import UserMinSerializer
+
+
 class VillageAssessmentSerializer(serializers.ModelSerializer):
     # Enforce required constraints at the API level (DB remains nullable for existing data)
     survey_start = serializers.DateField(required=True)
@@ -120,10 +123,19 @@ class VillageAssessmentSerializer(serializers.ModelSerializer):
     form_version = serializers.CharField(required=True)
     record_index = serializers.IntegerField(required=True)
 
+    uploaded_by = UserMinSerializer(read_only=True)
+    verified_by = UserMinSerializer(read_only=True)
+
     class Meta:
         model = VillageAssessment
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "uploaded_by",
+            "verified_by",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class VillageAssessmentImportSerializer(serializers.ModelSerializer):

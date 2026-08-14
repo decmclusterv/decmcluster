@@ -156,8 +156,9 @@ def get_displacement_unique_filters():
     """
     Returns unique values for admin1_name, operation, and reporting_year.
     """
+    base_qs = Displacement.objects.filter(status=Displacement.StatusChoices.VERIFIED)
     admin1_names = (
-        Displacement.objects
+        base_qs
         .exclude(admin1_name__isnull=True)
         .exclude(admin1_name="")
         .values_list("admin1_name", flat=True)
@@ -165,7 +166,7 @@ def get_displacement_unique_filters():
         .order_by("admin1_name")
     )
     operations = (
-        Displacement.objects
+        base_qs
         .exclude(operation__isnull=True)
         .exclude(operation="")
         .values_list("operation", flat=True)
@@ -173,7 +174,7 @@ def get_displacement_unique_filters():
         .order_by("operation")
     )
     reporting_years = (
-        Displacement.objects
+        base_qs
         .exclude(reporting_year__isnull=True)
         .values_list("reporting_year", flat=True)
         .distinct()

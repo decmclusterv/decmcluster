@@ -6,6 +6,7 @@ from .views import (
     VillageAssessmentImportRetrieveUpdateDestroyAPIView,
     VillageAssessmentListCreateAPIView,
     VillageAssessmentRetrieveUpdateDestroyAPIView,
+    VillageAssessmentReverifyAPIView,
 )
 
 urlpatterns = [
@@ -23,6 +24,11 @@ urlpatterns = [
         "village-assessments/<int:pk>/",
         VillageAssessmentRetrieveUpdateDestroyAPIView.as_view(),
         name="village-assessment-detail",
+    ),
+    path(
+        "village-assessments/<int:pk>/reverify/",
+        VillageAssessmentReverifyAPIView.as_view(),
+        name="village-assessment-reverify",
     ),
     path(
         "village-assessment-imports/",

@@ -14,9 +14,11 @@ class VillageAssessmentAdmin(ModelAdmin):
         "idp_present",
         "idp_individuals_total",
         "validation_status",
+        "status",
         "created_at",
     )
     list_filter = (
+        "status",
         "province",
         "area_council",
         "idp_present",

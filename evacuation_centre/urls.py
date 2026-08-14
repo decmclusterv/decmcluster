@@ -10,6 +10,7 @@ from .views import (
     EvacuationCentreMinimalListAPIView,
     EvacuationCentreSearchAPIView,
     EvacuationCentreStatsAPIView,
+    EvacuationCentreReverifyAPIView,
 )
 
 urlpatterns = [
@@ -57,5 +58,10 @@ urlpatterns = [
         "evacuation-centres/<int:pk>/",
         EvacuationCentreDetailAPIView.as_view(),
         name="evacuation-centre-detail",
+    ),
+    path(
+        "evacuation-centres/<int:pk>/reverify/",
+        EvacuationCentreReverifyAPIView.as_view(),
+        name="evacuation-centre-reverify",
     ),
 ]

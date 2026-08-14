@@ -49,6 +49,31 @@ class Displacement(models.Model):
     idp_destination_admin1_pcode = models.CharField(
         max_length=100, null=True, blank=True
     )
+    class StatusChoices(models.TextChoices):
+        UNVERIFIED = "unverified", "Unverified"
+        VERIFIED = "verified", "Verified"
+        RETURNED = "returned", "Returned"
+
+    status = models.CharField(
+        max_length=20,
+        choices=StatusChoices.choices,
+        default=StatusChoices.UNVERIFIED,
+        db_index=True,
+    )
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="uploaded_displacements",
+    )
+    verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="verified_displacements",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -59,6 +84,7 @@ class Displacement(models.Model):
             models.Index(fields=["admin2_name"]),
             models.Index(fields=["displacement_reason"]),
             models.Index(fields=["reporting_date"]),
+            models.Index(fields=["status"]),
         ]
         verbose_name = "Displacement"
         verbose_name_plural = "Displacement"

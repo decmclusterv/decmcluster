@@ -56,9 +56,17 @@ def handle_import_status_change(sender, instance, created, **kwargs):
 
                     file_name = instance.file.name.lower()
                     if file_name.endswith(".csv"):
-                        import_evacuation_centres_from_csv(instance.file)
+                        import_evacuation_centres_from_csv(
+                            instance.file,
+                            uploaded_by=instance.uploaded_by,
+                            verified_by=instance.verified_by,
+                        )
                     else:
-                        import_evacuation_centres_from_excel(instance.file)
+                        import_evacuation_centres_from_excel(
+                            instance.file,
+                            uploaded_by=instance.uploaded_by,
+                            verified_by=instance.verified_by,
+                        )
                 finally:
                     instance.file.close()
 
@@ -74,5 +82,37 @@ def handle_import_status_change(sender, instance, created, **kwargs):
             send_status_update_email(
                 instance=instance,
                 model_name="Evacuation Centre Import",
+                new_status=instance.status,
+            )
+
+
+from .models import EvacuationCentre
+
+
+@receiver(pre_save, sender=EvacuationCentre)
+def capture_evac_old_status(sender, instance, **kwargs):
+    if instance.pk:
+        try:
+            old_instance = sender.objects.get(pk=instance.pk)
+            instance._old_status = old_instance.status
+        except sender.DoesNotExist:
+            instance._old_status = None
+    else:
+        instance._old_status = None
+
+
+@receiver(post_save, sender=EvacuationCentre)
+def handle_evac_status_change(sender, instance, created, **kwargs):
+    if created:
+        return
+    old_status = getattr(instance, "_old_status", None)
+    if old_status and instance.status != old_status:
+        if instance.status in (
+            EvacuationCentre.StatusChoices.VERIFIED,
+            EvacuationCentre.StatusChoices.RETURNED,
+        ):
+            send_status_update_email(
+                instance=instance,
+                model_name="Evacuation Centre",
                 new_status=instance.status,
             )

@@ -154,7 +154,7 @@ def parse_date(val):
     return None
 
 
-def import_displacements_from_excel(file_path):
+def import_displacements_from_excel(file_path, uploaded_by=None, verified_by=None):
     """
     Parses Excel and directly creates Displacement records.
     """
@@ -242,13 +242,16 @@ def import_displacements_from_excel(file_path):
             idp_destination=to_str(idp_destination),
             idp_destination_admin1_name=to_str(idp_destination_admin1_name),
             idp_destination_admin1_pcode=to_str(idp_destination_admin1_pcode),
+            status=Displacement.StatusChoices.VERIFIED,
+            uploaded_by=uploaded_by,
+            verified_by=verified_by,
         )
         created_count += 1
 
     return created_count, 0
 
 
-def import_displacements_from_csv(file_obj):
+def import_displacements_from_csv(file_obj, uploaded_by=None, verified_by=None):
     """
     Parses CSV and directly creates Displacement records.
     """
@@ -356,6 +359,9 @@ def import_displacements_from_csv(file_obj):
             idp_destination=to_str(idp_destination),
             idp_destination_admin1_name=to_str(idp_destination_admin1_name),
             idp_destination_admin1_pcode=to_str(idp_destination_admin1_pcode),
+            status=Displacement.StatusChoices.VERIFIED,
+            uploaded_by=uploaded_by,
+            verified_by=verified_by,
         )
         created_count += 1
 

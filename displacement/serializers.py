@@ -1,7 +1,16 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from .models import Displacement, DisplacementImport
 from .services.import_service import find_missing_required_fields
+
+User = get_user_model()
+
+
+class UserMinSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "email", "first_name", "last_name", "role"]
 
 
 class DisplacementSerializer(serializers.ModelSerializer):
@@ -41,10 +50,19 @@ class DisplacementSerializer(serializers.ModelSerializer):
     idp_destination_admin1_name = serializers.CharField(required=True)
     idp_destination_admin1_pcode = serializers.CharField(required=True)
 
+    uploaded_by = UserMinSerializer(read_only=True)
+    verified_by = UserMinSerializer(read_only=True)
+
     class Meta:
         model = Displacement
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "uploaded_by",
+            "verified_by",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class FileImportSerializer(serializers.Serializer):

@@ -163,6 +163,31 @@ class VillageAssessment(models.Model):
     form_version = models.CharField(max_length=100, null=True, blank=True)
     record_index = models.IntegerField(null=True, blank=True)
 
+    class StatusChoices(models.TextChoices):
+        UNVERIFIED = "unverified", "Unverified"
+        VERIFIED = "verified", "Verified"
+        RETURNED = "returned", "Returned"
+
+    status = models.CharField(
+        max_length=20,
+        choices=StatusChoices.choices,
+        default=StatusChoices.UNVERIFIED,
+        db_index=True,
+    )
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="uploaded_village_assessments",
+    )
+    verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="verified_village_assessments",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -173,6 +198,7 @@ class VillageAssessment(models.Model):
             models.Index(fields=["village_name"]),
             models.Index(fields=["assessment_date"]),
             models.Index(fields=["validation_status"]),
+            models.Index(fields=["status"]),
         ]
         verbose_name = "Village Assessment"
         verbose_name_plural = "Village Assessments"

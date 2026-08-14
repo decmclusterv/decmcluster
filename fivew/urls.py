@@ -6,6 +6,7 @@ from .views import (
     FiveWActivityRetrieveUpdateDestroyAPIView,
     FiveWImportListCreateAPIView,
     FiveWImportRetrieveUpdateDestroyAPIView,
+    FiveWActivityReverifyAPIView,
 )
 
 urlpatterns = [
@@ -23,6 +24,11 @@ urlpatterns = [
         "fivew/activities/<int:pk>/",
         FiveWActivityRetrieveUpdateDestroyAPIView.as_view(),
         name="fivew-activity-detail",
+    ),
+    path(
+        "fivew/activities/<int:pk>/reverify/",
+        FiveWActivityReverifyAPIView.as_view(),
+        name="fivew-activity-reverify",
     ),
     path(
         "fivew/imports/",

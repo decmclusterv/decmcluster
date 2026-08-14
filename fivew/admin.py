@@ -14,9 +14,11 @@ class FiveWActivityAdmin(ModelAdmin):
         "activity_status",
         "reporting_month",
         "total_beneficiaries_reached",
+        "status",
         "created_at",
     )
     list_filter = (
+        "status",
         "activity_status",
         "reporting_month",
         "cluster_name",

@@ -316,7 +316,7 @@ def parse_datetime(val):
     return None
 
 
-def import_village_assessments_from_excel(file_path):
+def import_village_assessments_from_excel(file_path, uploaded_by=None, verified_by=None):
     """
     Parses Excel and directly creates VillageAssessment records.
     """
@@ -454,13 +454,16 @@ def import_village_assessments_from_excel(file_path):
             submitted_by=to_str(sheet.cell(row=r, column=111).value),
             form_version=to_str(sheet.cell(row=r, column=112).value),
             record_index=to_int(sheet.cell(row=r, column=113).value),
+            status=VillageAssessment.StatusChoices.VERIFIED,
+            uploaded_by=uploaded_by,
+            verified_by=verified_by,
         )
         created_count += 1
 
     return created_count, 0
 
 
-def import_village_assessments_from_csv(file_obj):
+def import_village_assessments_from_csv(file_obj, uploaded_by=None, verified_by=None):
     """
     Parses CSV and directly creates VillageAssessment records.
     """
@@ -615,6 +618,9 @@ def import_village_assessments_from_csv(file_obj):
             submitted_by=to_str(padded_row[110]),
             form_version=to_str(padded_row[111]),
             record_index=to_int(padded_row[112]),
+            status=VillageAssessment.StatusChoices.VERIFIED,
+            uploaded_by=uploaded_by,
+            verified_by=verified_by,
         )
         created_count += 1
 

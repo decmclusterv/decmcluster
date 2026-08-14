@@ -45,6 +45,31 @@ class EvacuationCentre(models.Model):
     kitchen_cooking_facilities = models.BooleanField(default=False)
     laundry_facilities = models.BooleanField(default=False)
     communication_back_up = models.CharField(max_length=255, null=True, blank=True)
+    class StatusChoices(models.TextChoices):
+        UNVERIFIED = "unverified", "Unverified"
+        VERIFIED = "verified", "Verified"
+        RETURNED = "returned", "Returned"
+
+    status = models.CharField(
+        max_length=20,
+        choices=StatusChoices.choices,
+        default=StatusChoices.UNVERIFIED,
+        db_index=True,
+    )
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="uploaded_evacuation_centres",
+    )
+    verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="verified_evacuation_centres",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -52,6 +77,7 @@ class EvacuationCentre(models.Model):
         indexes = [
             models.Index(fields=["compound_name"]),
             models.Index(fields=["latitude", "longitude"]),
+            models.Index(fields=["status"]),
         ]
 
     def clean(self):

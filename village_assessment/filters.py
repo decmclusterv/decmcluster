@@ -23,6 +23,8 @@ class VillageAssessmentFilter(filters.FilterSet):
         field_name="assessment_date", lookup_expr="lte"
     )
 
+    status = filters.CharFilter(field_name="status", lookup_expr="iexact")
+
     class Meta:
         model = VillageAssessment
         fields = [
@@ -32,4 +34,5 @@ class VillageAssessmentFilter(filters.FilterSet):
             "validation_status",
             "idp_present",
             "returnees_present",
+            "status",
         ]

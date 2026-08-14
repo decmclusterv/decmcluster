@@ -78,6 +78,31 @@ class FiveWActivity(models.Model):
     women_60_plus = models.IntegerField(null=True, blank=True, default=0)
     total_reached_quarter = models.IntegerField(null=True, blank=True, default=0)
 
+    class StatusChoices(models.TextChoices):
+        UNVERIFIED = "unverified", "Unverified"
+        VERIFIED = "verified", "Verified"
+        RETURNED = "returned", "Returned"
+
+    status = models.CharField(
+        max_length=20,
+        choices=StatusChoices.choices,
+        default=StatusChoices.UNVERIFIED,
+        db_index=True,
+    )
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="uploaded_fivew_activities",
+    )
+    verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="verified_fivew_activities",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -89,6 +114,7 @@ class FiveWActivity(models.Model):
             models.Index(fields=["activity_status"]),
             models.Index(fields=["state_abyei"]),
             models.Index(fields=["cluster_name"]),
+            models.Index(fields=["status"]),
         ]
         verbose_name = "5W Activity"
         verbose_name_plural = "5W Activities"

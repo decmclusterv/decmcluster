@@ -4,6 +4,9 @@ from .models import FiveWActivity, FiveWImport
 from .services.import_service import find_missing_required_fields
 
 
+from displacement.serializers import UserMinSerializer
+
+
 class FiveWActivitySerializer(serializers.ModelSerializer):
     # Enforce API validation required rules for all fields
     donor = serializers.CharField(required=True)
@@ -71,10 +74,19 @@ class FiveWActivitySerializer(serializers.ModelSerializer):
     women_60_plus = serializers.IntegerField(required=True)
     total_reached_quarter = serializers.IntegerField(required=True)
 
+    uploaded_by = UserMinSerializer(read_only=True)
+    verified_by = UserMinSerializer(read_only=True)
+
     class Meta:
         model = FiveWActivity
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "uploaded_by",
+            "verified_by",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class FiveWImportSerializer(serializers.ModelSerializer):

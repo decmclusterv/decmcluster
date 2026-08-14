@@ -4,6 +4,9 @@ from .models import EvacuationCentre, EvacuationCentreImport
 from .services.import_service import find_duplicate_compound_names
 
 
+from displacement.serializers import UserMinSerializer
+
+
 class EvacuationCentreSerializer(serializers.ModelSerializer):
     # Fields that are nullable in DB (to preserve existing data) but
     # required on new submissions via the API.
@@ -33,10 +36,19 @@ class EvacuationCentreSerializer(serializers.ModelSerializer):
     total_disability_access_shower = serializers.IntegerField(required=True)
     communication_back_up = serializers.CharField(required=True)
 
+    uploaded_by = UserMinSerializer(read_only=True)
+    verified_by = UserMinSerializer(read_only=True)
+
     class Meta:
         model = EvacuationCentre
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "uploaded_by",
+            "verified_by",
+            "created_at",
+            "updated_at",
+        ]
 
     def validate_compound_name(self, value):
         if not value:

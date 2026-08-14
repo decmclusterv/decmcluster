@@ -14,8 +14,11 @@ class DisplacementAdmin(ModelAdmin):
         "reporting_date",
         "displacement_reason",
         "operation_status",
+        "status",
+        "id"
     )
     list_filter = (
+        "status",
         "operation_status",
         "admin1_name",
         "displacement_reason",

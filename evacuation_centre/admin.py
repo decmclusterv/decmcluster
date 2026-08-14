@@ -14,9 +14,11 @@ class EvacuationCentreAdmin(ModelAdmin):
         "area_council",
         "latitude",
         "longitude",
+        "status",
         "created_at",
     )
     list_filter = (
+        "status",
         "province",
         "organization",
         "is_ec_owner_approved",

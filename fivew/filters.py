@@ -19,6 +19,8 @@ class FiveWActivityFilter(filters.FilterSet):
         field_name="cluster_name", lookup_expr="icontains"
     )
 
+    status = filters.CharFilter(field_name="status", lookup_expr="iexact")
+
     class Meta:
         model = FiveWActivity
         fields = [
@@ -28,4 +30,5 @@ class FiveWActivityFilter(filters.FilterSet):
             "reporting_month",
             "activity_status",
             "cluster_name",
+            "status",
         ]

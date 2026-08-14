@@ -201,7 +201,7 @@ def find_missing_required_fields(file_obj):
     return errors
 
 
-def import_evacuation_centres_from_excel(file_path):
+def import_evacuation_centres_from_excel(file_path, uploaded_by=None, verified_by=None):
     """
     Reads Evacuation Centres from an Excel sheet and creates them in the DB,
     skipping rows with duplicate compound names.
@@ -349,13 +349,16 @@ def import_evacuation_centres_from_excel(file_path):
             communication_back_up=str(communication_back_up).strip()
             if communication_back_up
             else None,
+            status=EvacuationCentre.StatusChoices.VERIFIED,
+            uploaded_by=uploaded_by,
+            verified_by=verified_by,
         )
         created_count += 1
 
     return created_count, skipped_count
 
 
-def import_evacuation_centres_from_csv(file_obj):
+def import_evacuation_centres_from_csv(file_obj, uploaded_by=None, verified_by=None):
     """
     Reads Evacuation Centres from a CSV file and creates them in the DB,
     skipping rows with duplicate compound names.
@@ -535,6 +538,9 @@ def import_evacuation_centres_from_csv(file_obj):
             communication_back_up=str(communication_back_up).strip()
             if communication_back_up
             else None,
+            status=EvacuationCentre.StatusChoices.VERIFIED,
+            uploaded_by=uploaded_by,
+            verified_by=verified_by,
         )
         created_count += 1
 

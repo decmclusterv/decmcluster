@@ -22,6 +22,8 @@ class EvacuationCentreFilter(django_filters.FilterSet):
     latitude = django_filters.NumberFilter(method="filter_by_coords")
     longitude = django_filters.NumberFilter(method="filter_by_coords")
 
+    status = django_filters.CharFilter(field_name="status", lookup_expr="iexact")
+
     class Meta:
         model = EvacuationCentre
         fields = [
@@ -36,6 +38,7 @@ class EvacuationCentreFilter(django_filters.FilterSet):
             "is_ec_govt_approved",
             "latitude",
             "longitude",
+            "status",
         ]
 
     def filter_by_coords(self, queryset, name, value):

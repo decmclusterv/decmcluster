@@ -4,13 +4,16 @@ from django.dispatch import receiver
 
 from decmcluster.services.email_service import send_status_update_email
 
-from .models import DisplacementImport
+from .models import Displacement, DisplacementImport
 from .services.import_service import (
     import_displacements_from_csv,
     import_displacements_from_excel,
     find_missing_required_fields,
 )
-from .utils import send_displacement_import_verification_email
+from .utils import (
+    send_displacement_import_verification_email,
+    send_displacement_verification_email,
+)
 
 
 @receiver(pre_save, sender=DisplacementImport)
@@ -56,9 +59,17 @@ def handle_import_status_change(sender, instance, created, **kwargs):
 
                     file_name = instance.file.name.lower()
                     if file_name.endswith(".csv"):
-                        import_displacements_from_csv(instance.file)
+                        import_displacements_from_csv(
+                            instance.file,
+                            uploaded_by=instance.uploaded_by,
+                            verified_by=instance.verified_by,
+                        )
                     else:
-                        import_displacements_from_excel(instance.file)
+                        import_displacements_from_excel(
+                            instance.file,
+                            uploaded_by=instance.uploaded_by,
+                            verified_by=instance.verified_by,
+                        )
                 finally:
                     instance.file.close()
 
@@ -74,5 +85,43 @@ def handle_import_status_change(sender, instance, created, **kwargs):
             send_status_update_email(
                 instance=instance,
                 model_name="Displacement Import",
+                new_status=instance.status,
+            )
+
+
+@receiver(pre_save, sender=Displacement)
+def capture_displacement_old_status(sender, instance, **kwargs):
+    """
+    Pre-save receiver to capture the status of the Displacement before saving.
+    """
+    if instance.pk:
+        try:
+            old_instance = sender.objects.get(pk=instance.pk)
+            instance._old_status = old_instance.status
+        except sender.DoesNotExist:
+            instance._old_status = None
+    else:
+        instance._old_status = None
+
+
+@receiver(post_save, sender=Displacement)
+def handle_displacement_status_change(sender, instance, created, **kwargs):
+    """
+    Post-save receiver to send email notifications for single displacement entries:
+    - Verification email when created as unverified.
+    - Uploader status update email when changed to verified/returned.
+    """
+    if created:
+        return
+
+    old_status = getattr(instance, "_old_status", None)
+    if old_status and instance.status != old_status:
+        if instance.status in (
+            Displacement.StatusChoices.VERIFIED,
+            Displacement.StatusChoices.RETURNED,
+        ):
+            send_status_update_email(
+                instance=instance,
+                model_name="Displacement",
                 new_status=instance.status,
             )

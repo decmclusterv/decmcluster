@@ -189,7 +189,7 @@ def to_str(val):
     return val_str
 
 
-def import_fivew_from_excel(file_path):
+def import_fivew_from_excel(file_path, uploaded_by=None, verified_by=None):
     """
     Parses Excel and directly creates FiveWActivity records.
     """
@@ -278,13 +278,16 @@ def import_fivew_from_excel(file_path):
             men_60_plus=to_int(sheet.cell(row=r, column=58).value),
             women_60_plus=to_int(sheet.cell(row=r, column=59).value),
             total_reached_quarter=to_int(sheet.cell(row=r, column=60).value),
+            status=FiveWActivity.StatusChoices.VERIFIED,
+            uploaded_by=uploaded_by,
+            verified_by=verified_by,
         )
         created_count += 1
 
     return created_count, 0
 
 
-def import_fivew_from_csv(file_obj):
+def import_fivew_from_csv(file_obj, uploaded_by=None, verified_by=None):
     """
     Parses CSV and directly creates FiveWActivity records.
     """
@@ -388,6 +391,9 @@ def import_fivew_from_csv(file_obj):
             men_60_plus=to_int(padded_row[57]),
             women_60_plus=to_int(padded_row[58]),
             total_reached_quarter=to_int(padded_row[59]),
+            status=FiveWActivity.StatusChoices.VERIFIED,
+            uploaded_by=uploaded_by,
+            verified_by=verified_by,
         )
         created_count += 1
 

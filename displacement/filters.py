@@ -24,6 +24,7 @@ class DisplacementFilter(django_filters.FilterSet):
     )
     reporting_year = django_filters.NumberFilter(field_name="reporting_year")
     reporting_month = django_filters.NumberFilter(field_name="reporting_month")
+    status = django_filters.CharFilter(field_name="status", lookup_expr="iexact")
 
     class Meta:
         model = Displacement
@@ -36,6 +37,7 @@ class DisplacementFilter(django_filters.FilterSet):
             "operation_status",
             "reporting_year",
             "reporting_month",
+            "status",
         ]
 
 

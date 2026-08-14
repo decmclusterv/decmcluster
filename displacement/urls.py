@@ -7,6 +7,7 @@ from .views import (
     DisplacementImportDetailAPIView,
     DisplacementImportListAPIView,
     DisplacementListCreateAPIView,
+    DisplacementReverifyAPIView,
     DisplacementStatsAPIView,
     DisplacementUniqueFiltersAPIView,
 )
@@ -51,5 +52,10 @@ urlpatterns = [
         "displacements/<int:pk>/",
         DisplacementDetailAPIView.as_view(),
         name="displacement-detail",
+    ),
+    path(
+        "displacements/<int:pk>/reverify/",
+        DisplacementReverifyAPIView.as_view(),
+        name="displacement-reverify",
     ),
 ]

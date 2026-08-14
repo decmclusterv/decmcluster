@@ -23,22 +23,41 @@ from .serializers import (
     FileImportSerializer,
 )
 from .services.export_service import generate_displacement_csv
+from .utils import send_displacement_verification_email
 
 
 class DisplacementListCreateAPIView(ListCreateAPIView):
-    queryset = Displacement.objects.all().order_by("id")
     serializer_class = DisplacementSerializer
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = DisplacementFilter
     search_fields = ["operation", "admin1_name", "admin2_name", "displacement_reason"]
-    permission_classes = [IsAuthenticated, RoleBasedPermission]
+    # permission_classes = [IsAuthenticated, RoleBasedPermission]
+
+    def get_queryset(self):
+        queryset = Displacement.objects.all().order_by("id")
+        status_param = self.request.query_params.get("status")
+        if status_param:
+            return queryset
+        return queryset.filter(status=Displacement.StatusChoices.VERIFIED)
+
+    def perform_create(self, serializer):
+        serializer.save(uploaded_by=self.request.user)
 
 
 class DisplacementDetailAPIView(RetrieveUpdateDestroyAPIView):
-    queryset = Displacement.objects.all()
     serializer_class = DisplacementSerializer
     permission_classes = [IsAuthenticated, RoleBasedPermission]
+
+    def get_queryset(self):
+        return Displacement.objects.all()
+
+    def perform_update(self, serializer):
+        status_value = self.request.data.get("status")
+        if status_value == Displacement.StatusChoices.VERIFIED:
+            serializer.save(verified_by=self.request.user)
+        else:
+            serializer.save()
 
 
 class DisplacementImportAPIView(GenericAPIView):
@@ -74,7 +93,8 @@ class DisplacementStatsAPIView(APIView):
     # permission_classes = [IsAuthenticated, RoleBasedPermission]
 
     def get(self, request, *args, **kwargs):
-        queryset = Displacement.objects.all()
+        queryset = Displacement.objects.filter(status=Displacement.StatusChoices.VERIFIED)
+
         filterset = DisplacementFilter(request.GET, queryset=queryset)
         if filterset.is_valid():
             queryset = filterset.qs
@@ -86,7 +106,10 @@ class DisplacementExportAPIView(APIView):
     # permission_classes = [IsAuthenticated, RoleBasedPermission]
 
     def get(self, request, *args, **kwargs):
-        queryset = Displacement.objects.all().order_by("-reporting_date")
+        queryset = Displacement.objects.filter(
+            status=Displacement.StatusChoices.VERIFIED
+        ).order_by("-reporting_date")
+
         filterset = DisplacementFilter(request.GET, queryset=queryset)
         if filterset.is_valid():
             queryset = filterset.qs
@@ -139,4 +162,31 @@ class DisplacementImportDetailAPIView(RetrieveUpdateDestroyAPIView):
             serializer.save(verified_by=self.request.user)
         else:
             serializer.save()
+
+
+class DisplacementReverifyAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk, *args, **kwargs):
+        try:
+            instance = Displacement.objects.get(pk=pk)
+        except Displacement.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if instance.uploaded_by != request.user:
+            return Response(
+                {"detail": "Only the uploader can resubmit for verification."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        instance.status = Displacement.StatusChoices.UNVERIFIED
+        instance.verified_by = None
+        instance.save()
+
+        comment_value = request.data.get("comment")
+        # Resend email to admin
+        send_displacement_verification_email(instance, comment=comment_value)
+
+        serializer = DisplacementSerializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
