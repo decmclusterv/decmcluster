@@ -1,0 +1,1 @@
+from .newsletter_selector import get_newsletter_subscribers

@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "django_filters",
     "account",
     "contact",
+    "newsletter",
     "useful_link",
     "assessment",
     "report",
@@ -106,13 +107,13 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://api.decmcluster.org",
     "https://www.api.decmcluster.org",
-    "https://fred-brother-affiliated-glass.trycloudflare.com",
+    "https://ron-facial-swim-migration.trycloudflare.com",
 ]
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "https://api.decmcluster.org",
     "https://www.api.decmcluster.org",
-    "https://fred-brother-affiliated-glass.trycloudflare.com",
+    "https://ron-facial-swim-migration.trycloudflare.com",
 ]
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
