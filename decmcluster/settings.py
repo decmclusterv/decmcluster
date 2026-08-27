@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     "announcement",
     "archive",
     "displacement_data",
+    "cluster_contact",
     "decmcluster.apps.DecmClusterConfig",
     "tinymce",
 ]
