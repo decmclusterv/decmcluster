@@ -299,6 +299,20 @@ class RoleBasedPermissionTests(APITestCase):
             role=User.Role.FIELD_COORDINATOR,
             is_active=True,
         )
+        self.area_admin = User.objects.create_user(
+            username="area_admin_test@example.com",
+            email="area_admin_test@example.com",
+            password="password123",
+            role=User.Role.AREA_ADMINISTRATOR,
+            is_active=True,
+        )
+        self.ec_focal_point = User.objects.create_user(
+            username="ec_focal_test@example.com",
+            email="ec_focal_test@example.com",
+            password="password123",
+            role=User.Role.EC_FOCAL_POINT,
+            is_active=True,
+        )
 
         # Create a sample UsefulLink
         self.useful_link = UsefulLink.objects.create(
@@ -371,11 +385,57 @@ class RoleBasedPermissionTests(APITestCase):
         response = self.client.post(self.list_url, {"title": "New Link 2", "url": "https://example.com"})
         assert response.status_code == status.HTTP_201_CREATED
 
-        # Coordinator CANNOT update
+        # Coordinator CAN update
         response = self.client.patch(self.detail_url, {"title": "Updated Title 2"})
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.status_code == status.HTTP_200_OK
 
         # Coordinator CANNOT delete
+        response = self.client.delete(self.detail_url)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_area_administrator_permissions(self):
+        self.client.force_authenticate(user=self.area_admin)
+
+        # Area Administrator can view list
+        response = self.client.get(self.list_url)
+        assert response.status_code == status.HTTP_200_OK
+
+        # Area Administrator can view detail
+        response = self.client.get(self.detail_url)
+        assert response.status_code == status.HTTP_200_OK
+
+        # Area Administrator CANNOT create (upload)
+        response = self.client.post(self.list_url, {"title": "Area Admin Link", "url": "https://example.com"})
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+        # Area Administrator CAN edit/update/verify
+        response = self.client.patch(self.detail_url, {"title": "Area Admin Updated Title"})
+        assert response.status_code == status.HTTP_200_OK
+
+        # Area Administrator CANNOT delete
+        response = self.client.delete(self.detail_url)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_ec_focal_point_permissions(self):
+        self.client.force_authenticate(user=self.ec_focal_point)
+
+        # EC Focal Point can view list
+        response = self.client.get(self.list_url)
+        assert response.status_code == status.HTTP_200_OK
+
+        # EC Focal Point can view detail
+        response = self.client.get(self.detail_url)
+        assert response.status_code == status.HTTP_200_OK
+
+        # EC Focal Point CAN create (upload)
+        response = self.client.post(self.list_url, {"title": "EC Link", "url": "https://example.com"})
+        assert response.status_code == status.HTTP_201_CREATED
+
+        # EC Focal Point CAN edit/update
+        response = self.client.patch(self.detail_url, {"title": "EC Updated Title"})
+        assert response.status_code == status.HTTP_200_OK
+
+        # EC Focal Point CANNOT delete
         response = self.client.delete(self.detail_url)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 

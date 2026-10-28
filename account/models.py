@@ -10,9 +10,11 @@ class User(AbstractUser):
 
     class Role(models.TextChoices):
         SUPERADMIN = "superadmin", "Superadmin"
+        AREA_ADMINISTRATOR = "area_administrator", "Area Administrator"
         VIEWER = "viewer", "Viewer"
         DATA_ENUMERATOR = "data_enumerator", "Data Enumerator"
         FIELD_COORDINATOR = "field_coordinator", "Field Coordinator"
+        EC_FOCAL_POINT = "ec_focal_point", "EC Focal Point"
 
     role = models.CharField(
         max_length=50,
