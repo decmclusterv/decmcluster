@@ -208,8 +208,6 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = []
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = Path(BASE_DIR, "media")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -223,22 +221,11 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=15),
 }
 
-AZURE_ACCOUNT_NAME = os.getenv("AZURE_ACCOUNT_NAME")
-
-AZURE_ACCOUNT_KEY = os.getenv("AZURE_ACCOUNT_KEY")
-
-AZURE_CONTAINER = "media"
-
-AZURE_CUSTOM_DOMAIN = f"{AZURE_ACCOUNT_NAME}.blob.core.windows.net"
-
+MEDIA_URL = "/media/"
+MEDIA_ROOT = Path("/srv/pgdata/app-storage/media")
 STORAGES = {
     "default": {
-        "BACKEND": "storages.backends.azure_storage.AzureStorage",
-        "OPTIONS": {
-            "account_name": AZURE_ACCOUNT_NAME,
-            "account_key": AZURE_ACCOUNT_KEY,
-            "azure_container": "media",
-        },
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
