@@ -156,6 +156,14 @@ class SuperAdminUserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop("password", None)
+        role = validated_data.get("role")
+        if role:
+            if role == User.Role.SUPERADMIN:
+                validated_data["is_superuser"] = True
+                validated_data["is_staff"] = True
+            else:
+                validated_data["is_superuser"] = False
+                validated_data["is_staff"] = False
         user = super().create(validated_data)
         if password:
             user.set_password(password)
@@ -164,6 +172,14 @@ class SuperAdminUserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         password = validated_data.pop("password", None)
+        role = validated_data.get("role")
+        if role:
+            if role == User.Role.SUPERADMIN:
+                validated_data["is_superuser"] = True
+                validated_data["is_staff"] = True
+            else:
+                validated_data["is_superuser"] = False
+                validated_data["is_staff"] = False
         user = super().update(instance, validated_data)
         if password:
             user.set_password(password)

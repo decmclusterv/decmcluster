@@ -28,8 +28,13 @@ class User(AbstractUser):
         if self.role == self.Role.SUPERADMIN:
             self.is_staff = True
             self.is_superuser = True
-        elif self.is_superuser or self.is_staff:
+        elif not self.pk and (self.is_superuser or self.is_staff):
             self.role = self.Role.SUPERADMIN
+            self.is_staff = True
+            self.is_superuser = True
+        else:
+            self.is_staff = False
+            self.is_superuser = False
         super().save(*args, **kwargs)
 
     def __str__(self):
